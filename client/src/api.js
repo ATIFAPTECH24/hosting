@@ -1,6 +1,6 @@
 // Backend ka base URL (short link isi se banta hai). Production mein VITE_SHORT_BASE set karein.
-//export const SHORT_BASE = import.meta.env.VITE_SHORT_BASE || 'http://localhost:8001'
-export const SHORT_BASE ='https://url-shortner-jmzw.onrender.com';
+export const SHORT_BASE = import.meta.env.VITE_SHORT_BASE || 'http://localhost:8001'
+//export const SHORT_BASE ='https://url-shortner-jmzw.onrender.com';
 export async function createShortUrl(url) {
   const res = await fetch('/url', {
     method: 'POST',
