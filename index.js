@@ -6,7 +6,7 @@ import {redirectUrl} from './controllers/url.js'
 // import {router as urlRoute} from './routes/url.js'
 // app.use('/url',urlRoute)
 const app=express();
-app.use(cors())
+app.use(cors());
 app.use(express.json())
 
 const PORT=8001;
