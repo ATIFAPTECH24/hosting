@@ -1,41 +1,53 @@
-// Backend ka base URL (short link isi se banta hai). Production mein VITE_SHORT_BASE set karein.
-export const SHORT_BASE = import.meta.env.VITE_SHORT_BASE || 'http://localhost:8001'
-//export const SHORT_BASE ='https://url-shortner-jmzw.onrender.com';
+// API base URL comes from the Vite environment file (.env).
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://url-shortner-jmzw.onrender.com').replace(/\/$/, '')
+export const SHORT_BASE = (import.meta.env.VITE_SHORT_BASE || API_BASE_URL).replace(/\/$/, '')
+
+async function request(path, options = {}) {
+  let response
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, options)
+  } catch {
+    throw new Error('Backend se connect nahi ho pa raha. Render backend ko check karein aur CORS settings verify karein.')
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || data.message || `Request failed (${response.status})`)
+  }
+  return data
+}
+
 export async function createShortUrl(url) {
-  const res = await fetch('/url', {
+  return request('/url', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ url }),
   })
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(data.error || 'Something went wrong')
-  return data // { id, message }
 }
 
 export async function getAllUrls() {
-  const res = await fetch('/url')
-  if (!res.ok) throw new Error('Could not load links')
-  return res.json() // [{ id, url, clicks, createdAt }]
+  const data = await request('/url')
+  // Support APIs that return either an array or an object containing the array.
+  if (Array.isArray(data)) return data
+  return data.urls || data.data || []
 }
 
 export async function deleteUrl(id) {
-  await fetch(`/url/${id}`, { method: 'DELETE' })
+  return request(`/url/${encodeURIComponent(id)}`, { method: 'DELETE' })
 }
 
 export async function getAnalytics(id) {
-  const res = await fetch(`/url/analytics/${id}`)
-  if (!res.ok) throw new Error('Not found')
-  return res.json() // { totalClicks, analytics }
+  return request(`/url/analytics/${encodeURIComponent(id)}`)
 }
 
 export function normalizeUrl(input) {
-  const v = input.trim()
-  if (!v) return ''
-  const withProto = /^https?:\/\//i.test(v) ? v : `https://${v}`
+  const value = input.trim()
+  if (!value) return ''
+  const withProtocol = /^https?:\/\//i.test(value) ? value : `https://${value}`
   try {
-    const u = new URL(withProto)
-    if (!u.hostname.includes('.')) return ''
-    return u.href
+    const parsed = new URL(withProtocol)
+    if (!parsed.hostname.includes('.')) return ''
+    return parsed.href
   } catch {
     return ''
   }

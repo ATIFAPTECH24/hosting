@@ -43,13 +43,19 @@ export default function App() {
       setHistory((h) => [item, ...h.filter((x) => x.id !== id)])
       setInput('')
     } catch (err) {
-      setError(err.message === 'Failed to fetch' ? 'Backend se connect nahi ho pa raha. Server (port 8001) chal raha hai?' : err.message)
+      setError(err.message || 'URL shorten nahi ho saka. Backend aur CORS settings check karein.')
     } finally { setLoading(false) }
   }
 
   const remove = async (id) => {
-    await deleteUrl(id)
-    setHistory((h) => h.filter((x) => x.id !== id))
+    setError('')
+    try {
+      await deleteUrl(id)
+      setHistory((h) => h.filter((x) => x.id !== id))
+      if (latest?.id === id) setLatest(null)
+    } catch (err) {
+      setError(err.message || 'Link delete nahi ho saka.')
+    }
   }
   const short = (id) => `${SHORT_BASE}/${id}`
 
