@@ -1,5 +1,5 @@
 // API base URL comes from the Vite environment file (.env).
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://url-shortner-jmzw.onrender.com').replace(/\/$/, '')
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://shorturlproject.onrender.com').replace(/\/$/, '')
 export const SHORT_BASE = (import.meta.env.VITE_SHORT_BASE || API_BASE_URL).replace(/\/$/, '')
 
 async function request(path, options = {}) {
