@@ -13,18 +13,40 @@ function CopyButton({ text }) {
   return <button className={`btn ghost ${done ? 'ok' : ''}`} onClick={copy}>{done ? 'Copied ✓' : 'Copy'}</button>
 }
 
+const STORAGE_KEY = 'snip:links'
+
+function loadLocal() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+    return Array.isArray(raw) ? raw.filter((x) => x && x.id) : []
+  } catch { return [] }
+}
+function saveLocal(list) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)) } catch { /* storage blocked */ }
+}
+
 export default function App() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [latest, setLatest] = useState(null)
-  const [history, setHistory] = useState([])
+  // Sirf is browser ke localStorage wale links
+  const [history, setHistory] = useState(loadLocal)
   const [refreshing, setRefreshing] = useState(false)
 
-  // MongoDB se saare links + clicks load karo
+  // History change ho to localStorage mein save karo
+  useEffect(() => { saveLocal(history) }, [history])
+
+  // Backend se sirf localStorage wali ids ke clicks update karo (baaki links ignore)
   const refreshClicks = async () => {
     setRefreshing(true)
-    try { setHistory(await getAllUrls()) } catch { /* backend off ho to list waisi hi rahegi */ }
+    try {
+      const all = await getAllUrls()
+      const byId = new Map(all.map((u) => [u.id, u]))
+      setHistory((h) => h
+        .filter((x) => byId.has(x.id)) // server pe delete ho chuka ho to hata do
+        .map((x) => ({ ...x, clicks: byId.get(x.id).clicks ?? x.clicks ?? 0 })))
+    } catch { /* backend off ho to local list waisi hi rahegi */ }
     setRefreshing(false)
   }
 
